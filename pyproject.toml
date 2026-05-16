@@ -1,0 +1,41 @@
+[project]
+name = "second-brain"
+version = "0.1.0"
+description = "Local-first personal knowledge system"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "typer>=0.12.0",
+]
+
+[project.scripts]
+sb = "second_brain.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/second_brain"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "SIM"]
+
+[tool.ruff.lint.flake8-bugbear]
+# Typer requires Argument/Option calls in parameter defaults.
+extend-immutable-calls = ["typer.Argument", "typer.Option"]
+
+[tool.mypy]
+strict = true
+python_version = "3.11"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6.0",
+    "mypy>=1.11",
+]
