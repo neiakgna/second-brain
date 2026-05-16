@@ -8,7 +8,7 @@
 
 <br>
 
-<img src="docs/demo.gif" alt="second-brain in action" width="720">
+<img src="docs/demo.svg" alt="second-brain in action" width="720">
 
 <br><br>
 
