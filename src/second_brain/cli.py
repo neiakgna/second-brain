@@ -4,7 +4,11 @@ from pathlib import Path
 
 import typer
 
+from second_brain.embed import Embedder
 from second_brain.ingest import ingest_directory
+from second_brain.store import Store
+
+DEFAULT_DB = Path("second_brain.db")
 
 app = typer.Typer(
     name="sb",
@@ -14,8 +18,11 @@ app = typer.Typer(
 
 
 @app.command()
-def ingest(path: Path = typer.Argument(..., help="Directory of markdown files")) -> None:
-    """Ingest markdown files from a directory."""
+def ingest(
+    path: Path = typer.Argument(..., help="Directory of markdown files"),
+    db: Path = typer.Option(DEFAULT_DB, help="Database file path"),
+) -> None:
+    """Ingest markdown files: chunk, embed, and store them."""
     if not path.exists():
         typer.echo(f"Error: path does not exist: {path}", err=True)
         raise typer.Exit(code=1)
@@ -25,8 +32,16 @@ def ingest(path: Path = typer.Argument(..., help="Directory of markdown files"))
         typer.echo(f"No markdown files found under: {path}")
         return
 
-    file_count = len({chunk.source for chunk in chunks})
-    typer.echo(f"Ingested {file_count} file(s) into {len(chunks)} chunk(s).")
+    typer.echo(f"Found {len(chunks)} chunk(s). Embedding (first run downloads the model)...")
+    embedder = Embedder()
+    embedded = embedder.embed_chunks(chunks)
+
+    store = Store(db)
+    added = store.add(embedded)
+    store.close()
+
+    file_count = len({item.chunk.source for item in embedded})
+    typer.echo(f"Stored {added} chunk(s) from {file_count} file(s) in {db}.")
 
 
 @app.command()
@@ -36,9 +51,14 @@ def search(query: str = typer.Argument(..., help="Search query")) -> None:
 
 
 @app.command()
-def stats() -> None:
-    """Show indexing statistics."""
-    typer.echo("Would show stats (not implemented yet)")
+def stats(db: Path = typer.Option(DEFAULT_DB, help="Database file path")) -> None:
+    """Show how many chunks are stored."""
+    if not db.exists():
+        typer.echo(f"No database at {db}. Run 'sb ingest <folder>' first.")
+        return
+    store = Store(db)
+    typer.echo(f"{store.count()} chunk(s) stored in {db}.")
+    store.close()
 
 
 if __name__ == "__main__":
