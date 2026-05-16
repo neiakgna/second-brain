@@ -111,7 +111,7 @@ Released under the [MIT License](LICENSE).
 
 <div align="center">
 
-**Built by H**
+**Built by Hayden**
 
 <sub>Local-first by design.</sub>
 
