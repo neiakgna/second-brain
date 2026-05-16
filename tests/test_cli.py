@@ -13,7 +13,13 @@ def test_help() -> None:
     assert "Local-first" in result.output
 
 
-def test_search_placeholder() -> None:
-    result = runner.invoke(app, ["search", "hello"])
+def test_search_without_database() -> None:
+    result = runner.invoke(app, ["search", "hello", "--db", "no_such_index.db"])
     assert result.exit_code == 0
-    assert "hello" in result.output
+    assert "No database" in result.output
+
+
+def test_stats_without_database() -> None:
+    result = runner.invoke(app, ["stats", "--db", "no_such_index.db"])
+    assert result.exit_code == 0
+    assert "No database" in result.output

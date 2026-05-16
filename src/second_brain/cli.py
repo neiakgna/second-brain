@@ -6,6 +6,7 @@ import typer
 
 from second_brain.embed import Embedder
 from second_brain.ingest import ingest_directory
+from second_brain.search import search as run_search
 from second_brain.store import Store
 
 DEFAULT_DB = Path("second_brain.db")
@@ -45,9 +46,27 @@ def ingest(
 
 
 @app.command()
-def search(query: str = typer.Argument(..., help="Search query")) -> None:
-    """Search the knowledge base."""
-    typer.echo(f"Would search for: {query!r} (not implemented yet)")
+def search(
+    query: str = typer.Argument(..., help="Search query"),
+    db: Path = typer.Option(DEFAULT_DB, help="Database file path"),
+    k: int = typer.Option(5, help="Number of results to return"),
+) -> None:
+    """Search the knowledge base for chunks matching the query."""
+    if not db.exists():
+        typer.echo(f"No database at {db}. Run 'sb ingest <folder>' first.")
+        return
+
+    hits = run_search(query, db, k=k)
+    if not hits:
+        typer.echo("No matching results.")
+        return
+
+    for rank, hit in enumerate(hits, start=1):
+        preview = " ".join(hit.text.split())
+        if len(preview) > 200:
+            preview = preview[:200] + "..."
+        typer.echo(f"{rank}. {hit.source}  (distance {hit.distance:.3f})")
+        typer.echo(f"   {preview}")
 
 
 @app.command()
